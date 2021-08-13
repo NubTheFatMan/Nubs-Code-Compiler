@@ -663,6 +663,13 @@ function compile(tree, notFirstIteration) {
                 if (tree.value === "(") out += ")";
             } break;
 
+            case "ternary": {
+                let cond = compile(tree.first, true);
+                let t = compile(tree.second, true);
+                let f = compile(tree.third, true);
+                out += `${cond}?${t}:${f}`;
+            } break;
+
             case "function": {
                 let params = compileArray(tree.first);
                 let block = compile(tree.second, true);
@@ -692,7 +699,7 @@ let f = function(y) {
 };
 
 if (true) {
-    let p = 0;
+    let p = n >= 4 ? true : false;
 }
 `;
 
