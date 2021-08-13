@@ -18,7 +18,7 @@ const fs = require('fs'); // For debugging, the parse tree gets outputed to `out
 //     columnInd: 0
 // }
 function tokenize(source) {
-    let lines = (source instanceof Array) ? source : source.split(/\n|\r\n?/); // The lines should be an array, so split it
+    let lines = (source instanceof Array) ? source : source.trim().split(/\n|\r\n?/); // The lines should be an array, so split it
     let result = [];
 
     lines.forEach((line, lineInd) => {
@@ -152,7 +152,7 @@ function createParserInstance() {
             return n.std();
         }
         v = expression(0);
-        if (!v.assignment && v.id !== "(") throw new Error("Bad expression statement '" + v.id + "'.");
+        // if (!v.assignment && v.id !== "(") throw new Error("Bad expression statement '" + v.id + "'.");
         advance(";");
         return v;
     }
@@ -174,7 +174,7 @@ function createParserInstance() {
     }
 
     let originalSymbol = {
-        nud: function() {throw new Error("Undefined.");},
+        nud: function() {throw new Error(`Undefined variable access - ${this.value} @ Line ${this.lineInd}, Column ${this.columnInd}`);},
         led: function() {throw new Error("Missing operator.");}
     }
 
@@ -496,10 +496,6 @@ function createParserInstance() {
         return this;
     });
 
-    function getSymbolValue(con) {
-        return symbolTable[con].value;
-    }
-
     let keys = Object.keys(funcs);
     for (let i = 0; i < keys.length; i++) {
         let key = keys[i];
@@ -512,13 +508,6 @@ function createParserInstance() {
                     a.push(expression(0));
                     if (token.id !== ",") break;
                     advance(",");
-                }
-            }
-            for (let i = 0; i < a.length; i++) {
-                let t = a[i];
-                if (t.arity === "name" && symbolTable[t.value] && symbolTable[t.value].lbp === 0) {
-                    t.value = getSymbolValue(t.value);
-                    t.arity = "literal";
                 }
             }
             this.first = a;
@@ -556,6 +545,7 @@ for (let i = 0; i < mathMethods.length; i++) {
     let m = mathMethods[i];
     createFunc(m, `Math.${m}`);
 }
+createFunc("print", "console.log");
 
 function compileArray(tree) {
     let out = [];
@@ -573,7 +563,7 @@ function compileUnary(ar) {
             out.push(compileUnary(ar[i]));
         }
     } else {
-        out.push(`"${ar.key.replace(/"/, '\\"')}":${compile(ar, true)}`);
+        out.push(`"${ar.key.replace(/"/g, '\\"')}":${compile(ar, true)}`);
     }
     return out;
 }
@@ -688,19 +678,9 @@ function compileAndRun(input) {
 }
 
 let toCompile = `
-let n = 4 ^ 2;
-let x = 5;
-
-n += x;
-
-let f = function(y) {
-    let x = 0;
-    return y * x + 1;
-};
-
-if (true) {
-    let p = n >= 4 ? true : false;
-}
+let myVar = 321;
+4 + 5;
+print(myVar);
 `;
 
 let out = parse(tokenize(toCompile));
