@@ -595,12 +595,12 @@ function compile(tree, notFirstIteration) {
                 if (vData.reserved) continue;
 
                 let exists = false;
-                while (scope.parent) {
+                parentCheck: while (scope.parent) {
                     let scopeVars = scope.def;
                     for (let sv in scopeVars) {
                         if (sv === v) {
                             exists = true;
-                            break;
+                            break parentCheck;
                         }
                     }
                     scope = scope.parent;
