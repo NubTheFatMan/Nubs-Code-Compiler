@@ -683,10 +683,24 @@ let myVar = 321;
 print(myVar);
 `;
 
-let out = parse(tokenize(toCompile));
+let tokenStart = Date.now();
+let tokens = tokenize(toCompile);
+let tokenTime = Date.now() - tokenStart;
+
+let parseStart = Date.now();
+let out = parse(tokens);
+let parseTime = Date.now() - parseStart;
+
+let compStart = Date.now();
+let compiled = compile(out);
+let compTime = Date.now() - compStart;
+
+let totalTime = Date.now() - tokenStart;
+
 fs.writeFileSync("parse_tree.json", JSON.stringify(out, ["key", "name", "value", "arity", "first", "second", "third"], 4));
 
 console.log('\n// Input:');
 console.log(toCompile.trim());
 console.log('\n// Output (reconstructed/compiled):');
-console.log(compile(out));
+console.log(compiled);
+console.log(`//----------------\n// Lexer time: ${tokenTime}ms\n// Parser time: ${parseTime}ms\n// Compiler time: ${compTime}ms\n// Total time: ${totalTime}ms`);
